@@ -14,3 +14,12 @@ example:
 voi@pc:~/Documents/replay$ sudo python3 thor.py --rgb 7700e0
 ```
 > it will hopefully output `[21/21]`
+
+### notes
+
+> [!note]
+> ### AI disclaimer
+> the python script was made in a big part with AI. however, i did use virtualbox with USB passthrough and went into wireshark, captured, and examined the packets being sent. i did confirm which exact packets were essential, and i did confirm that the script works on my keyboard.
+
+> [!tip]
+> the keyboard (at least my model) likes shifting the LEDs towards blue, so to achieve a purple, the input colour has to be closer to pink
