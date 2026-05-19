@@ -13,7 +13,11 @@ sudo python3 -m pip install pyqt6 pyusb
 ```
 
 ### usage
-use the gui
+1. download `thor_keymap.json` and `thorgui.py`
+
+2. put them in the same folder
+
+3. use the gui
 ```
 sudo python3 thorgui.py
 ```
