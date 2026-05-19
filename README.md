@@ -1,7 +1,10 @@
 ## Thor 404 TKL controller for Linux
 Supports custom per-key configuration, different lighting modes, and user-defined colours.
 
-<img width="643" height="442" alt="image" src="https://github.com/user-attachments/assets/a2aa4736-8163-4083-8f8a-1185aa3984d2" />
+> <img width="643" height="442" alt="image" src="https://github.com/user-attachments/assets/a2aa4736-8163-4083-8f8a-1185aa3984d2" />
+
+Custom mode:
+> <img width="1249" height="489" alt="image" src="https://github.com/user-attachments/assets/66305902-1c92-4a38-81a7-20f138edd5fc" />
 
 ---
 
