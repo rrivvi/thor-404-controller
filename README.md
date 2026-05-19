@@ -1,28 +1,26 @@
-this is a repo in which i experiment with changing my genesis thor 404 tkl keyboard's led lighting through python
+## Thor 404 TKL controller for Linux
+Supports custom per-key configuration, different lighting modes, and user-defined colours.
 
-> [!NOTE]
-> `custom` per-key rgb mode is not coming. though, everything else should work.
+<img width="643" height="442" alt="image" src="https://github.com/user-attachments/assets/a2aa4736-8163-4083-8f8a-1185aa3984d2" />
 
 ---
 
-im using nobara linux but this should be straightforward for any linux distro
-
 ### dependencies
-1. get pyusb<br>
+1. get pyusb and pyqt6<br>
 installed it with sudo because pyusb wouldn't shut up about permissions:
 ```
-sudo python3 -m pip install pyusb
+sudo python3 -m pip install pyqt6 pyusb
 ```
 
 ### usage
-use the interactive terminal interface
+use the gui
 ```
-sudo python3 thorctl.py --tui
+sudo python3 thorgui.py
 ```
 
 ---
 
-it also accepts arguments
+it also accepts arguments (press apply in gui to apply)
 ```
 sudo python3 thorctl.py --effect static --rgb 0000ff
 ```
@@ -71,7 +69,7 @@ there is a `Custom` preset which allows for per-key lighting, but for now i'm ha
 
 > [!note]
 > ### AI disclaimer
-> the python script was made in a big part with AI. however, i did use virtualbox with USB passthrough and went into wireshark, captured, and examined the packets being sent. tshark was used to filter the .pcapng files in the `effects` folder. i do know how the main packet is structured. i did confirm which exact packets were essential, and i did confirm that the script works on my keyboard.
+> the python script was made in a big part with AI. however, i did use virtualbox with USB passthrough and went into wireshark, captured, and examined the packets being sent. tshark was used to filter the .pcapng files in the `effects` folder. only the essential packets are being sent, and the script is confirmed to be working on my hardware.
 
 > [!tip]
 > ### Resources
