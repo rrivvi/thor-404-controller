@@ -73,7 +73,7 @@ the main packet's offsets:
 
 > [!note]
 > ### AI disclaimer
-> the python script was made in a big part with AI. however, i did use virtualbox with USB passthrough and went into wireshark, captured, and examined the packets being sent. tshark was used to filter the .pcapng files in the [Resources](https://github.com/neoforean/thor-404-linux-rgb-script/tree/resources)' `*_txt` folders. only the essential packets are being sent, and the script is confirmed to be working on my hardware.
+> the python script was made in a big part with AI. however, i did use virtualbox with USB passthrough and went into wireshark, captured, and examined the packets being sent. tshark was used to filter the .pcapng files in the [Resources](https://github.com/neoforean/thor-404-controller/tree/resources)' `*_txt` folders. only the essential packets are being sent, and the script is confirmed to be working on my hardware.
 
 > [!tip]
 > ### Resources
