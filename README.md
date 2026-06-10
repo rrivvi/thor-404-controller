@@ -3,48 +3,24 @@ Control RGB lighting on the Genesis Thor 404 TKL keyboard under Linux.
 
 Supports per-key "custom" mode, custom colour, presets, brightness adjustment & speed control.
 
-> <img alt="The main window's GUI" width="643" height="442" alt="image" src="https://github.com/user-attachments/assets/a2aa4736-8163-4083-8f8a-1185aa3984d2" />
+> main win
 
 Custom mode:
-> <img alt="The per-key lighting editor window GUI for the 'Custom' preset" width="1249" height="489" alt="image" src="https://github.com/user-attachments/assets/66305902-1c92-4a38-81a7-20f138edd5fc" />
+> per key win
 
 ---
-
-### dependencies
-1. get pyusb and pyqt6<br>
-installed it with sudo because pyusb wouldn't shut up about permissions:
-```
-sudo python3 -m pip install pyqt6 pyusb
-```
 
 ### usage
-1. download `thor_keymap.json` and `thorgui.py`
+1. download latest release
 
-2. put them in the same folder
+2. open terminal in the directory
 
-3. use the gui
+3. use the gui with sudo (without sudo, HidSharp may fail)
 ```
-sudo python3 thorgui.py
-```
-
----
-
-it also accepts arguments (press apply in gui to apply)
-```
-sudo python3 thorgui.py --effect static --rgb 0000ff
-```
-
-
-```
-sudo python3 thorgui.py --effect rainbow --multicolor --direction down
+sudo ./Thor404Controller
 ```
 
 ---
-
-list available presets
-```
-sudo python3 thorgui.py --list
-```
 
 ### technical
 the main packet's offsets:
@@ -69,13 +45,9 @@ the main packet's offsets:
 > | multicolor | `0x01` = enabled |
 > | brightness | `0x10` = 16      |
 > | speed      | `0x02` = 2       |
-> | direction  | `0x01` = right   |
+> | direction  | `0x01` = left   |
 
 ### notes
-
-> [!note]
-> ### AI disclaimer
-> the python script was made in a big part with AI. USB packets were captured and verified using VirtualBox with USB passthrough, Wireshark and tshark. This software sends only the essential packets. Tested and working on a real Thor 404 TKL keyboard.
 
 > [!tip]
 > ### Resources
