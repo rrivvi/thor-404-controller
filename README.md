@@ -1,3 +1,7 @@
+todo
+per key
+request admin
+
 # Genesis Thor 404 TKL RGB Controller for Linux
 Control RGB lighting on the Genesis Thor 404 TKL keyboard under Linux.
 
