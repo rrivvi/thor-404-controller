@@ -125,7 +125,8 @@ namespace Thor404Controller
             customLabel.SetXalign(0);
 
             var customButton = Button.NewWithLabel("Customize per-key lighting");
-            customButton.OnClicked += (_, __) => {
+            customButton.OnClicked += (_, __) =>
+            {
                 // custom todo
             };
 
@@ -161,28 +162,35 @@ namespace Thor404Controller
                     ((byte)Math.Round(selectedColor.Green * 255)).ToString("X2"),
                     ((byte)Math.Round(selectedColor.Blue * 255)).ToString("X2")
                 );
+                Effects.EffectsEnum selectedPreset = (Effects.EffectsEnum)effectDropdown.GetSelected();
+                bool enableMulticolor = multicolorCheck.GetActive();
+                byte brightnessValue = (byte)brightnessScale.GetValue();
+                byte speedValue = (byte)speedScale.GetValue();
+                Effects.DirectionEnum selectedDirection = (Effects.DirectionEnum)directionDropdown.GetSelected();
 
                 Console.WriteLine();
                 Console.WriteLine("APPLYING PRESET");
-                Console.WriteLine("   preset: " + ((Effects.EffectsEnum)effectDropdown.GetSelected()).ToString());
+                Console.WriteLine("   preset: " + selectedPreset);
                 Console.WriteLine("   color: #" + rgb);
-                Console.WriteLine("   multicolor: " + multicolorCheck.GetActive());
-                Console.WriteLine("   brightness: " + brightnessScale.GetValue());
-                Console.WriteLine("   speed: " + speedScale.GetValue());
-                Console.WriteLine("   direction: " + (Effects.DirectionEnum)Math.Max(((byte)directionDropdown.GetSelected()) - 0x01, 0x00));
+                Console.WriteLine("   multicolor: " + enableMulticolor);
+                Console.WriteLine("   brightness: " + brightnessValue);
+                Console.WriteLine("   speed: " + speedValue);
+                Console.WriteLine("   direction: " + selectedDirection);
                 Console.WriteLine();
 
-                try{
-                Effects.ApplyEffect(
-                    (Effects.EffectsEnum)effectDropdown.GetSelected(),
-                    rgb,
-                    multicolorCheck.GetActive(),
-                    (byte)brightnessScale.GetValue(),
-                    (byte)speedScale.GetValue(),
-                    (Effects.DirectionEnum)Math.Max(((byte)directionDropdown.GetSelected()) - 0x01, 0x00) // Left and None share the same value but the dropdown returns 0x00 for None yet 0x01 for Left, so subtract 1 and clamp to 0+
-                );
+                try
+                {
+                    Effects.ApplyEffect(
+                        selectedPreset,
+                        rgb,
+                        enableMulticolor,
+                        brightnessValue,
+                        speedValue,
+                        selectedDirection
+                    );
                 }
-                catch (Exception e){
+                catch (Exception e)
+                {
                     Console.WriteLine("`Effects.ApplyEffect` failed in Program.cs:\n\n" + e.Message + "\n\n" + e.StackTrace + "\n\n");
                 }
             };

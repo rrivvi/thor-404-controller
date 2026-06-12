@@ -103,7 +103,6 @@ namespace Thor404Controller
         // fun fact: (0x00, 0x03) and (0x01, 0x02) seem to have the same behaviour
         public enum DirectionEnum : byte
         {
-            None = 0x00,
             Right = 0x00,
             Left = 0x01,
             Up = 0x02,
