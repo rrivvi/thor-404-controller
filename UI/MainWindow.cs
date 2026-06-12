@@ -219,7 +219,7 @@ namespace Thor404Controller.UI
                 bool enableMulticolor = multicolorCheck.GetActive();
                 byte brightnessValue = (byte)brightnessScale.GetValue();
                 byte speedValue = (byte)speedScale.GetValue();
-                Effects.DirectionEnum selectedDirection = (Effects.DirectionEnum)directionDropdown.GetSelected();
+                Effects.DirectionEnum selectedDirection = Enum.Parse<Effects.DirectionEnum>(DirectionsEntries.GetString(directionDropdown.GetSelected())!);
 
                 Console.WriteLine();
                 Console.WriteLine("APPLYING PRESET");
