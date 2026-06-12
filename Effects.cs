@@ -15,8 +15,7 @@ namespace Thor404Controller
            JObject? keymapJObject = null,
            Dictionary<string, string>? keyColorsDict = null)
         {
-            var device = DeviceList.Local.GetHidDevices(Usb.VENDOR_ID, Usb.PRODUCT_ID)
-                .FirstOrDefault(d => d.GetMaxFeatureReportLength() == 65); // 64 + 1, otherwise it sometimes selects the wrong device
+            HidDevice? device = Usb.TryGetHidDevice();
 
             if (device == null)
             {

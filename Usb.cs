@@ -1,3 +1,6 @@
+
+using HidSharp;
+
 namespace Thor404Controller
 {
     partial class Usb
@@ -39,5 +42,11 @@ namespace Thor404Controller
             "04020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "04f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
         };
+
+        internal static HidDevice? TryGetHidDevice()
+        {
+            return DeviceList.Local.GetHidDevices(Usb.VENDOR_ID, Usb.PRODUCT_ID)
+                .FirstOrDefault(d => d.GetMaxFeatureReportLength() == 65); // 64 + 1, otherwise it sometimes selects the wrong device
+        }
     }
 }
