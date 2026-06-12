@@ -233,9 +233,6 @@ namespace Thor404Controller.UI
             saveButton.OnClicked += (_, _) =>
             {
                 Program.customColorsPairs = new Dictionary<string, string>(colors);
-                // quality of life: if user clicked "Save", spare some of their time
-                // by auto-selecting the EffectsEnum.Custom preset
-                MainWindow.PresetsDropdown.SetSelected((uint)Effects.EffectsEnum.Custom);
                 window.Close();
             };
 

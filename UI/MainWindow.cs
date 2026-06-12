@@ -4,7 +4,7 @@ namespace Thor404Controller.UI
 {
     partial class MainWindow
     {
-        internal static DropDown PresetsDropdown {get; private set;} = null!; // won't be null by the time it's used
+        static readonly StringList DirectionsEntries = StringList.New(["Left", "Up"]);
 
         internal static async Task<ApplicationWindow> CreateWindow(Application app)
         {
@@ -86,22 +86,11 @@ namespace Thor404Controller.UI
             effectLabel.SetSizeRequest(80, -1);
             effectLabel.SetXalign(0);
 
-            PresetsDropdown = DropDown.NewFromStrings(Enum.GetNames<Effects.EffectsEnum>());
-            PresetsDropdown.SetHexpand(true);
-
-            PresetsDropdown.OnNotify += (sender, notifyArgs) =>
-            {
-                // todo: update directionDropdown entries based on preset
-                // because most presets only support specific directions 
-                
-                // ^ EffectsEnum.Custom should disable everything
-                // except "Customize per-key lighting" AND BRIGHTNESS
-
-                // todo: disable / reenable the "Customize per-key lighting" button
-            };
+            DropDown presetsDropdown = DropDown.NewFromStrings(Enum.GetNames<Effects.EffectsEnum>());
+            presetsDropdown.SetHexpand(true);
 
             effectBox.Append(effectLabel);
-            effectBox.Append(PresetsDropdown);
+            effectBox.Append(presetsDropdown);
 
             // 
             var colorBox = Box.New(Orientation.Horizontal, 8);
@@ -114,11 +103,11 @@ namespace Thor404Controller.UI
             colorDialog.SetTitle("Choose a color");
             colorDialog.SetWithAlpha(false);
 
-            // in gtk this opens the dialog on click, and color is accessible through colorButton.GetRgba
-            var colorButton = ColorDialogButton.New(colorDialog);
+            // in gtk this opens the dialog on click, and color is accessible through ColorDialogButton.GetRgba
+            ColorDialogButton colorPicker = ColorDialogButton.New(colorDialog);
 
             colorBox.Append(colorLabel);
-            colorBox.Append(colorButton);
+            colorBox.Append(colorPicker);
 
             // 
             var brightnessRow = Box.New(Orientation.Horizontal, 8);
@@ -127,7 +116,7 @@ namespace Thor404Controller.UI
             brightnessLabel.SetSizeRequest(80, -1);
             brightnessLabel.SetXalign(0);
 
-            var brightnessScale = Scale.NewWithRange(
+            Scale brightnessScale = Scale.NewWithRange(
                 Orientation.Horizontal,
                 0,
                 16,
@@ -148,7 +137,7 @@ namespace Thor404Controller.UI
             speedLabel.SetSizeRequest(80, -1);
             speedLabel.SetXalign(0);
 
-            var speedScale = Scale.NewWithRange(
+            Scale speedScale = Scale.NewWithRange(
                 Orientation.Horizontal,
                 0,
                 16,
@@ -169,15 +158,14 @@ namespace Thor404Controller.UI
             directionLabel.SetSizeRequest(80, -1);
             directionLabel.SetXalign(0);
 
-            var directionDropdown = DropDown.NewFromStrings(Enum.GetNames<Effects.DirectionEnum>());
+            DropDown directionDropdown = DropDown.New(DirectionsEntries, null);
             directionDropdown.SetHexpand(true);
 
             directionRow.Append(directionLabel);
             directionRow.Append(directionDropdown);
 
             // 
-            var multicolorCheck =
-                CheckButton.NewWithLabel("Enable multicolor mode");
+            CheckButton multicolorCheck = CheckButton.NewWithLabel("Enable multicolor mode");
 
             // custom
             var customRow = Box.New(Orientation.Horizontal, 8);
@@ -186,18 +174,18 @@ namespace Thor404Controller.UI
             customLabel.SetSizeRequest(80, -1);
             customLabel.SetXalign(0);
 
-            var customButton = Button.NewWithLabel("Customize per-key lighting");
-            customButton.OnClicked += (_, _) =>
+            Button perKeyButton = Button.NewWithLabel("Customize per-key lighting");
+            perKeyButton.OnClicked += (_, _) =>
             {
                 var editor = CustomEditorWindow.CreateWindow(app, win);
                 editor.Present();
             };
 
-            customButton.SetHexpand(true);
-            customButton.SetSensitive(true);
+            perKeyButton.SetHexpand(true);
+            perKeyButton.SetSensitive(true);
 
             customRow.Append(customLabel);
-            customRow.Append(customButton);
+            customRow.Append(perKeyButton);
 
             //
 
@@ -217,15 +205,17 @@ namespace Thor404Controller.UI
             buttonGrid.SetRowSpacing(8);
 
             var applyButton = Button.NewWithLabel("Apply");
-            applyButton.OnClicked += (_, __) =>
+            applyButton.OnClicked += async (_, __) =>
             {
-                Gdk.RGBA selectedColor = colorButton.GetRgba();
+                applyButton.SetSensitive(false);
+
+                Gdk.RGBA selectedColor = colorPicker.GetRgba();
                 var rgb = string.Concat(
                     ((byte)Math.Round(selectedColor.Red * 255)).ToString("X2"),
                     ((byte)Math.Round(selectedColor.Green * 255)).ToString("X2"),
                     ((byte)Math.Round(selectedColor.Blue * 255)).ToString("X2")
                 );
-                Effects.EffectsEnum selectedPreset = (Effects.EffectsEnum)PresetsDropdown.GetSelected();
+                Effects.EffectsEnum selectedPreset = (Effects.EffectsEnum)presetsDropdown.GetSelected();
                 bool enableMulticolor = multicolorCheck.GetActive();
                 byte brightnessValue = (byte)brightnessScale.GetValue();
                 byte speedValue = (byte)speedScale.GetValue();
@@ -256,6 +246,9 @@ namespace Thor404Controller.UI
                 {
                     Console.WriteLine("`Effects.ApplyEffect` failed in Program.cs:\n\n" + e.Message + "\n\n" + e.StackTrace + "\n\n");
                 }
+
+                await Task.Delay(1000);
+                applyButton.SetSensitive(true);
             };
 
             applyButton.SetHexpand(true);
@@ -267,6 +260,197 @@ namespace Thor404Controller.UI
             main.Append(buttonGrid);
 
             win.SetChild(main);
+
+            //
+
+            // when switching presets, this updates the enabled states of the controls
+            void ToggleEnabledStates(Effects.EffectsEnum preset)
+            {
+                void UpdateDirectionDropdown(bool horizontal)
+                {
+                    while (DirectionsEntries.GetNItems() > 0)
+                        DirectionsEntries.Remove(0);
+
+                    DirectionsEntries.Append(horizontal ? "Left" : "Up");
+                    DirectionsEntries.Append(horizontal ? "Right" : "Down");
+
+                    directionDropdown.SetSelected(0);
+                }
+
+                if (preset == Effects.EffectsEnum.Custom)
+                {
+                    perKeyButton.SetSensitive(true);
+                    colorPicker.SetSensitive(false);
+                    brightnessScale.SetSensitive(true);
+                    speedScale.SetSensitive(false);
+                    directionDropdown.SetSensitive(false);
+                    multicolorCheck.SetSensitive(false);
+                }
+                else if (preset == Effects.EffectsEnum.Disabled)
+                {
+                    perKeyButton.SetSensitive(false);
+                    colorPicker.SetSensitive(false);
+                    brightnessScale.SetSensitive(false);
+                    speedScale.SetSensitive(false);
+                    directionDropdown.SetSensitive(false);
+                    multicolorCheck.SetSensitive(false);
+                }
+                else
+                {
+                    perKeyButton.SetSensitive(false);
+                    switch (preset)
+                    {
+                        case Effects.EffectsEnum.Static:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(false);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.SingleOn:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.SingleOff:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Stars:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Raindrops:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Colourful:
+                            colorPicker.SetSensitive(false);
+                            multicolorCheck.SetSensitive(false);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Breathing:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Neon:
+                            colorPicker.SetSensitive(false);
+                            multicolorCheck.SetSensitive(false);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Spectrum:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Rainbow:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(true);
+                            UpdateDirectionDropdown(horizontal: false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Prismo:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(true);
+                            UpdateDirectionDropdown(horizontal: true);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Circle:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.EscapeBeam:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Shockwave:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Explosion:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Escape:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(true);
+                            UpdateDirectionDropdown(horizontal: true);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.SineWave:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Wave:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(true);
+                            UpdateDirectionDropdown(horizontal: true);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                        case Effects.EffectsEnum.Shuttle:
+                            colorPicker.SetSensitive(true);
+                            multicolorCheck.SetSensitive(true);
+                            directionDropdown.SetSensitive(false);
+                            speedScale.SetSensitive(true);
+                            brightnessScale.SetSensitive(true);
+                            break;
+                    }
+                }
+            }
+
+            // attached to this event here so that
+            // no null references are thrown
+            presetsDropdown.OnNotify += (sender, notifyArgs) =>
+            {
+                ToggleEnabledStates((Effects.EffectsEnum)presetsDropdown.GetSelected());
+            };
+            // also call it now so that the state is correct on startup 
+            ToggleEnabledStates((Effects.EffectsEnum)presetsDropdown.GetSelected());
+
+            //
 
             Console.WriteLine("Window Created");
             return win;
