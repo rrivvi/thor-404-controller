@@ -41,10 +41,10 @@ namespace Thor404Controller
         // constructs the repeating 80RRGGBB per-key hex
         public static List<string> BuildCustomFramePackets(
         JObject keymap,
-        Dictionary<string, string> keyColors,
-        string fallbackRgb)
+        Dictionary<string, string> keyColors)
         {
-            fallbackRgb = ValidateRgb(fallbackRgb);
+            // in case there's no entry in the dictionary, don't light up the key (black)
+            string fallbackRgb = "000000";
 
             List<byte[]> rows = Enumerable.Range(0, 9)
                 .Select(_ => Enumerable.Repeat((byte)0x80, 1)

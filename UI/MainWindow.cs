@@ -1,15 +1,66 @@
 using Gtk;
 
-namespace Thor404Controller
+namespace Thor404Controller.UI
 {
     partial class MainWindow
     {
-        internal static ApplicationWindow CreateWindow(Application app)
+        internal static DropDown PresetsDropdown {get; private set;} = null!; // won't be null by the time it's used
+
+        internal static async Task<ApplicationWindow> CreateWindow(Application app)
         {
             var win = ApplicationWindow.New(app);
             win.SetTitle("Thor 404");
             win.SetDefaultSize(640, 420);
             win.SetResizable(false);
+
+            Console.WriteLine("Checking for permissions / device");
+            // will be null if 1) no device found, or 2) missing admin perms to open hidraw
+            bool canProceed = Usb.TryGetHidDevice() != null;
+
+            if (!canProceed)
+            {
+                Console.WriteLine("Device not found or root permissions not given");
+                win.Present();
+
+                var permsWarning = Box.New(Orientation.Vertical, 12);
+                permsWarning.Halign = Align.Center;
+                permsWarning.Valign = Align.Center;
+
+                var title = Label.New(null);
+                title.SetMarkup("<span size=\"x-large\" weight=\"bold\">Device or permissions not found!</span>");
+                title.Halign = Align.Center;
+                title.MarginBottom = 8;
+
+                var message = Label.New(
+                    "Please connect the device.\n" +
+                    $"If it is already connected, please run this program {(OperatingSystem.IsLinux() ? "with sudo" : "as administrator")}."
+                );
+                message.Halign = Align.Center;
+                message.Justify = Justification.Center;
+
+                var retryButton = Button.NewWithLabel("Retry");
+
+                retryButton.OnClicked += (_, _) =>
+                {
+                    canProceed = Usb.TryGetHidDevice() != null;
+                };
+
+                permsWarning.Append(title);
+                permsWarning.Append(message);
+                permsWarning.Append(retryButton);
+
+                win.SetChild(permsWarning);
+
+                while (!canProceed)
+                {
+                    await Task.Delay(500);
+                }
+
+                win.SetChild(null);
+                permsWarning?.Dispose();
+            }
+
+            Console.WriteLine("Device found and sufficient permissions");
 
             // 
             var main = Box.New(Orientation.Vertical, 12);
@@ -35,11 +86,22 @@ namespace Thor404Controller
             effectLabel.SetSizeRequest(80, -1);
             effectLabel.SetXalign(0);
 
-            var effectDropdown = DropDown.NewFromStrings(Enum.GetNames<Effects.EffectsEnum>());
-            effectDropdown.SetHexpand(true);
+            PresetsDropdown = DropDown.NewFromStrings(Enum.GetNames<Effects.EffectsEnum>());
+            PresetsDropdown.SetHexpand(true);
+
+            PresetsDropdown.OnNotify += (sender, notifyArgs) =>
+            {
+                // todo: update directionDropdown entries based on preset
+                // because most presets only support specific directions 
+                
+                // ^ EffectsEnum.Custom should disable everything
+                // except "Customize per-key lighting" AND BRIGHTNESS
+
+                // todo: disable / reenable the "Customize per-key lighting" button
+            };
 
             effectBox.Append(effectLabel);
-            effectBox.Append(effectDropdown);
+            effectBox.Append(PresetsDropdown);
 
             // 
             var colorBox = Box.New(Orientation.Horizontal, 8);
@@ -125,13 +187,14 @@ namespace Thor404Controller
             customLabel.SetXalign(0);
 
             var customButton = Button.NewWithLabel("Customize per-key lighting");
-            customButton.OnClicked += (_, __) =>
+            customButton.OnClicked += (_, _) =>
             {
-                // custom todo
+                var editor = CustomEditorWindow.CreateWindow(app, win);
+                editor.Present();
             };
 
             customButton.SetHexpand(true);
-            customButton.SetSensitive(false);
+            customButton.SetSensitive(true);
 
             customRow.Append(customLabel);
             customRow.Append(customButton);
@@ -162,7 +225,7 @@ namespace Thor404Controller
                     ((byte)Math.Round(selectedColor.Green * 255)).ToString("X2"),
                     ((byte)Math.Round(selectedColor.Blue * 255)).ToString("X2")
                 );
-                Effects.EffectsEnum selectedPreset = (Effects.EffectsEnum)effectDropdown.GetSelected();
+                Effects.EffectsEnum selectedPreset = (Effects.EffectsEnum)PresetsDropdown.GetSelected();
                 bool enableMulticolor = multicolorCheck.GetActive();
                 byte brightnessValue = (byte)brightnessScale.GetValue();
                 byte speedValue = (byte)speedScale.GetValue();
@@ -205,6 +268,7 @@ namespace Thor404Controller
 
             win.SetChild(main);
 
+            Console.WriteLine("Window Created");
             return win;
         }
     }

@@ -45,8 +45,15 @@ namespace Thor404Controller
 
         internal static HidDevice? TryGetHidDevice()
         {
-            return DeviceList.Local.GetHidDevices(Usb.VENDOR_ID, Usb.PRODUCT_ID)
-                .FirstOrDefault(d => d.GetMaxFeatureReportLength() == 65); // 64 + 1, otherwise it sometimes selects the wrong device
+            try
+            {
+                return DeviceList.Local.GetHidDevices(Usb.VENDOR_ID, Usb.PRODUCT_ID)
+                    .FirstOrDefault(d => d.GetMaxFeatureReportLength() == 65); // 64 + 1, otherwise it sometimes selects the wrong device
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

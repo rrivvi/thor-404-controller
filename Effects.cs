@@ -1,5 +1,4 @@
 using HidSharp;
-using Newtonsoft.Json.Linq;
 
 namespace Thor404Controller
 {
@@ -11,9 +10,7 @@ namespace Thor404Controller
            bool multicolor,
            int brightness,
            int speed,
-           DirectionEnum direction,
-           JObject? keymapJObject = null,
-           Dictionary<string, string>? keyColorsDict = null)
+           DirectionEnum direction)
         {
             HidDevice? device = Usb.TryGetHidDevice();
 
@@ -21,6 +18,8 @@ namespace Thor404Controller
             {
                 throw new Exception("keyboard not found");
             }
+
+            bool isCustomPerKey = effect == EffectsEnum.Custom;
 
             using (HidStream stream = device.Open())
             {
@@ -30,23 +29,13 @@ namespace Thor404Controller
                 packets.AddRange(Usb.HANDSHAKE_PACKETS);
                 packets.AddRange(Usb.COMMON_PREFIX_PACKETS);
 
-                if (effect == EffectsEnum.Custom)
+                if (isCustomPerKey)
                 {
-                    Console.WriteLine("todo: ApplyEffect for EffectsEnum.Custom");
-                    return;
-
-                    if (keymapJObject == null)
-                    {
-                        throw new Exception("keymap is null");
-                    }
-
                     packets.AddRange(
-                        Packet.BuildCustomFramePackets(
-                            keymapJObject,
-                            keyColorsDict ?? new(),
-                            rgb
-                        )
-                    );
+                    Packet.BuildCustomFramePackets(
+                        Program.keymapJObject,
+                        Program.customColorsPairs
+                    ));
                 }
                 else
                 {
