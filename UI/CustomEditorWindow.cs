@@ -47,11 +47,14 @@ namespace Thor404Controller.UI
 
             var actionRow = Box.New(Orientation.Horizontal, 8);
 
-            var applySelection = Button.NewWithLabel("Apply to selection");
-            applySelection.OnClicked += (_, _) => ApplyToActiveButtons(buttons, colors, colorButton);
-
             var selectAll = Button.NewWithLabel("Select All");
             selectAll.OnClicked += (_, _) => SetAllButtons(buttons, true);
+
+            var clearSelection = Button.NewWithLabel("Clear Selection");
+            clearSelection.OnClicked += (_, _) => SetAllButtons(buttons, false);
+
+            var applySelection = Button.NewWithLabel("Apply to selection");
+            applySelection.OnClicked += (_, _) => ApplyToActiveButtons(buttons, colors, colorButton);
 
             var applyAll = Button.NewWithLabel("Apply to All");
             applyAll.OnClicked += (_, _) =>
@@ -62,9 +65,6 @@ namespace Thor404Controller.UI
                     UpdateKeyColor(colors, button, keyName, rgb);
                 }
             };
-
-            var clearSelection = Button.NewWithLabel("Clear Selection");
-            clearSelection.OnClicked += (_, _) => SetAllButtons(buttons, false);
 
             var resetAll = Button.NewWithLabel("Reset All");
             resetAll.OnClicked += (_, _) =>
