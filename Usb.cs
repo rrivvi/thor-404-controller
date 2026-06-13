@@ -47,7 +47,7 @@ namespace Thor404Controller
         {
             try
             {
-                return DeviceList.Local.GetHidDevices(Usb.VENDOR_ID, Usb.PRODUCT_ID)
+                return DeviceList.Local.GetHidDevices(VENDOR_ID, PRODUCT_ID)
                     .FirstOrDefault(d => d.GetMaxFeatureReportLength() == 65); // 64 + 1, otherwise it sometimes selects the wrong device
             }
             catch

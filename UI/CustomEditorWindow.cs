@@ -53,11 +53,8 @@ namespace Thor404Controller.UI
             var selectAll = Button.NewWithLabel("Select All");
             selectAll.OnClicked += (_, _) => SetAllButtons(buttons, true);
 
-            var clearSelection = Button.NewWithLabel("Clear Selection");
-            clearSelection.OnClicked += (_, _) => SetAllButtons(buttons, false);
-
-            var fillAll = Button.NewWithLabel("Fill All");
-            fillAll.OnClicked += (_, _) =>
+            var applyAll = Button.NewWithLabel("Apply to All");
+            applyAll.OnClicked += (_, _) =>
             {
                 var rgb = Helpers.RgbaToHex(colorButton.GetRgba());
                 foreach (var (keyName, button) in buttons)
@@ -66,10 +63,28 @@ namespace Thor404Controller.UI
                 }
             };
 
-            actionRow.Append(applySelection);
+            var clearSelection = Button.NewWithLabel("Clear Selection");
+            clearSelection.OnClicked += (_, _) => SetAllButtons(buttons, false);
+
+            var resetAll = Button.NewWithLabel("Reset All");
+            resetAll.OnClicked += (_, _) =>
+            {
+                var rgb = Helpers.RgbaToHex(colorButton.GetRgba());
+                foreach (var (keyName, button) in buttons)
+                {
+                    UpdateKeyColor(colors, button, keyName, "000000");
+                }
+                
+                SetAllButtons(buttons, false);
+            };
+
             actionRow.Append(selectAll);
             actionRow.Append(clearSelection);
-            actionRow.Append(fillAll);
+            actionRow.Append(Separator.New(Orientation.Vertical));
+            actionRow.Append(applySelection);
+            actionRow.Append(applyAll);
+            actionRow.Append(Separator.New(Orientation.Vertical));
+            actionRow.Append(resetAll);
 
             var scroller = ScrolledWindow.New();
             scroller.SetPolicy(PolicyType.Automatic, PolicyType.Automatic);
@@ -236,8 +251,37 @@ namespace Thor404Controller.UI
                 window.Close();
             };
 
+            var applyButton = Button.NewWithLabel("Apply");
+            applyButton.OnClicked += async (_, _) =>
+            {
+                applyButton.SetSensitive(false);
+
+                Program.customColorsPairs = new Dictionary<string, string>(colors);
+                try
+                {
+                    // EffectsEnum.Custom only cares about brightness and the per-key packets, not the main packet's rgb hex
+                    Effects.ApplyEffect(
+                        Effects.EffectsEnum.Custom,
+                        "000000",
+                        false,
+                        MainWindow.GetBrightness(),
+                        0,
+                        0
+                    );
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("`Effects.ApplyEffect` failed in CustomEditorWindow.cs:\n\n" + e.Message + "\n\n" + e.StackTrace + "\n\n");
+                }
+
+                await Task.Delay(1000);
+                applyButton.SetSensitive(true);
+            };
+
             bottomRow.Append(cancelButton);
             bottomRow.Append(saveButton);
+            bottomRow.Append(Separator.New(Orientation.Vertical));
+            bottomRow.Append(applyButton);
 
             root.Append(topRow);
             root.Append(actionRow);
@@ -255,7 +299,9 @@ namespace Thor404Controller.UI
             var row = Box.New(Orientation.Horizontal, 2);
 
             foreach (var child in children)
+            {
                 row.Append(child);
+            }
 
             return row;
         }
@@ -292,7 +338,9 @@ namespace Thor404Controller.UI
         private static void SetAllButtons(Dictionary<string, ToggleButton> buttons, bool active)
         {
             foreach (var button in buttons.Values)
+            {
                 button.SetActive(active);
+            }
         }
 
         private static void ApplyToActiveButtons(
@@ -305,7 +353,9 @@ namespace Thor404Controller.UI
             foreach (var (keyName, button) in buttons)
             {
                 if (button.GetActive())
+                {
                     UpdateKeyColor(colors, button, keyName, rgb);
+                }
             }
         }
 

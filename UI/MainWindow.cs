@@ -5,6 +5,8 @@ namespace Thor404Controller.UI
     partial class MainWindow
     {
         static readonly StringList DirectionsEntries = StringList.New(["Left", "Up"]);
+        private static byte _brightness = 12;
+        public static byte GetBrightness() => _brightness;
 
         internal static async Task<ApplicationWindow> CreateWindow(Application app)
         {
@@ -122,6 +124,9 @@ namespace Thor404Controller.UI
                 16,
                 1
             );
+            brightnessScale.OnNotify += (_, __) => {
+                _brightness = (byte)brightnessScale.GetValue();
+            };
 
             brightnessScale.SetValue(16);
             brightnessScale.SetHexpand(true);
@@ -215,16 +220,6 @@ namespace Thor404Controller.UI
                 byte brightnessValue = (byte)brightnessScale.GetValue();
                 byte speedValue = (byte)speedScale.GetValue();
                 Effects.DirectionEnum selectedDirection = Enum.Parse<Effects.DirectionEnum>(DirectionsEntries.GetString(directionDropdown.GetSelected())!);
-
-                Console.WriteLine();
-                Console.WriteLine("APPLYING PRESET");
-                Console.WriteLine("   preset: " + selectedPreset);
-                Console.WriteLine("   color: #" + rgb);
-                Console.WriteLine("   multicolor: " + enableMulticolor);
-                Console.WriteLine("   brightness: " + brightnessValue);
-                Console.WriteLine("   speed: " + speedValue);
-                Console.WriteLine("   direction: " + selectedDirection);
-                Console.WriteLine();
 
                 try
                 {
@@ -436,8 +431,8 @@ namespace Thor404Controller.UI
                 }
             }
 
-            // attached to this event here so that
-            // no null references are thrown
+            // attached to this event here because ToggleEnabledStates
+            // had to be defined after the variables it references
             presetsDropdown.OnNotify += (sender, notifyArgs) =>
             {
                 ToggleEnabledStates((Effects.EffectsEnum)presetsDropdown.GetSelected());

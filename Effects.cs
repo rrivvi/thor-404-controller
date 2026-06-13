@@ -12,6 +12,16 @@ namespace Thor404Controller
            int speed,
            DirectionEnum direction)
         {
+            Console.WriteLine();
+            Console.WriteLine("APPLYING PRESET");
+            Console.WriteLine("   preset: " + effect);
+            Console.WriteLine("   color: #" + rgb);
+            Console.WriteLine("   multicolor: " + multicolor);
+            Console.WriteLine("   brightness: " + brightness);
+            Console.WriteLine("   speed: " + speed);
+            Console.WriteLine("   direction: " + direction);
+            Console.WriteLine();
+
             HidDevice? device = Usb.TryGetHidDevice();
 
             if (device == null)
@@ -23,7 +33,6 @@ namespace Thor404Controller
 
             using (HidStream stream = device.Open())
             {
-
                 List<string> packets = new();
 
                 packets.AddRange(Usb.HANDSHAKE_PACKETS);
