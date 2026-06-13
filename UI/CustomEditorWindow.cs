@@ -2,7 +2,7 @@ using Gtk;
 
 namespace Thor404Controller.UI
 {
-    internal static class CustomEditorWindow
+    internal static partial class CustomEditorWindow
     {
         private readonly record struct KeyDef(string Name, string Label, int Width);
 
