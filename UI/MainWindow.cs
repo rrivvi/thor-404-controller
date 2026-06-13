@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Gtk;
 
 namespace Thor404Controller.UI
@@ -8,43 +9,105 @@ namespace Thor404Controller.UI
         private static byte _brightness = 12;
         public static byte GetBrightness() => _brightness;
 
-        internal static async Task<ApplicationWindow> CreateWindow(Application app)
+        static async Task RunChecks(ApplicationWindow win)
         {
-            var win = ApplicationWindow.New(app);
-            win.SetTitle("Thor 404");
-            win.SetDefaultSize(640, 420);
-            win.SetResizable(false);
+            // `issueFound = null` would mean that no issues were found
+            // this may get set to a non-null value in later checks
+            string? issueFound = null;
 
-            Console.WriteLine("Checking for permissions / device");
-            // will be null if 1) no device found, or 2) missing admin perms to open hidraw
-            bool canProceed = Usb.TryGetHidDevice() != null;
-
-            if (!canProceed)
+            // not an actual loop. it won't get ran more than once
+            // this is only used for its `break` functionality
+            // this is to avoid a nested `if` if more checks get added
+            while (true)
             {
-                Console.WriteLine("Device not found or root permissions not given");
-                win.Present();
+                Console.WriteLine("Checking for permissions");
+                if (!Helpers.IsCurrentProcessElevated())
+                {
+                    issueFound = "admin";
+                    break;
+                }
+
+                Console.WriteLine("Searching for device");
+                if (Usb.TryGetHidDevice() == null)
+                {
+                    issueFound = "device";
+                    break;
+                }
+
+                break;
+            }
+
+            if (issueFound != null)
+            {
+                string titleString =
+                    issueFound == "admin" ?
+                    "Root permissions not given" :
+                    issueFound == "device" ?
+                    "Device not found" :
+                    ""; // should not be reachable
+
+                string messageString =
+                    issueFound == "admin" ?
+                    "Please authorise the program to launch an elevated process." :
+                    issueFound == "device" ?
+                    "Make sure you have plugged in the Thor 404 TKL keyboard.\nThis program is made only for that keyboard." :
+                    ""; // should not be reachable      
+
+                string buttonString =
+                    issueFound == "admin" ?
+                    "Grant Permissions" :
+                    issueFound == "device" ?
+                    "Retry" :
+                    ""; // should not be reachable 
+                Console.WriteLine(titleString);
+
+                //
 
                 var permsWarning = Box.New(Orientation.Vertical, 12);
                 permsWarning.Halign = Align.Center;
                 permsWarning.Valign = Align.Center;
 
                 var title = Label.New(null);
-                title.SetMarkup("<span size=\"x-large\" weight=\"bold\">Device or permissions not found!</span>");
+                title.SetMarkup($"<span size=\"x-large\" weight=\"bold\">{titleString}</span>");
                 title.Halign = Align.Center;
                 title.MarginBottom = 8;
 
-                var message = Label.New(
-                    "Please connect the device.\n" +
-                    $"If it is already connected, please run this program {(OperatingSystem.IsLinux() ? "with sudo" : "as administrator")}."
-                );
+                var message = Label.New(messageString);
                 message.Halign = Align.Center;
                 message.Justify = Justification.Center;
 
-                var retryButton = Button.NewWithLabel("Retry");
+                var retryButton = Button.NewWithLabel(buttonString);
 
-                retryButton.OnClicked += (_, _) =>
+                retryButton.OnClicked += async (_, _) =>
                 {
-                    canProceed = Usb.TryGetHidDevice() != null;
+                    switch (issueFound)
+                    {
+                        case "device":
+                            if (Usb.TryGetHidDevice() != null)
+                            {
+                                issueFound = null;
+                            }
+                            break;
+                        case "admin":
+                            // if Item1 is true, Item2 is the new process asking to be elevated
+                            (bool, Process) elevationResult = Helpers.TryStartElevated();
+                            if (elevationResult.Item1)
+                            {
+                                // hide this window visually and let the new process
+                                // show the pkexec authorisation screen
+                                win.Hide();
+                                win?.Dispose();
+                                Console.WriteLine("Original window hidden and disposed");
+
+                                await elevationResult.Item2.WaitForExitAsync();
+                                elevationResult.Item2?.Dispose();
+
+                                // user elevated priviledges (or didn't) for a new process of this executable
+                                // continuing here would run this instance hidden in the background
+                                Environment.Exit(0);
+                            }
+                            break;
+                    }
                 };
 
                 permsWarning.Append(title);
@@ -52,17 +115,29 @@ namespace Thor404Controller.UI
                 permsWarning.Append(retryButton);
 
                 win.SetChild(permsWarning);
+                win.Present();
 
-                while (!canProceed)
+                while (issueFound != null)
                 {
-                    await Task.Delay(500);
+                    await Task.Delay(1000);
                 }
 
                 win.SetChild(null);
                 permsWarning?.Dispose();
             }
+        }
 
-            Console.WriteLine("Device found and sufficient permissions");
+        internal static async Task<ApplicationWindow> CreateWindow(Application app)
+        {
+            var win = ApplicationWindow.New(app);
+            win.SetTitle("Thor 404");
+            win.SetDefaultSize(640, 420);
+            win.SetResizable(false);
+
+            // before the actual gui is shown to the user,
+            // run checks for admin, device, etc.
+            await RunChecks(win);
+            Console.WriteLine("Checks passed, now creating the GUI");
 
             // 
             var main = Box.New(Orientation.Vertical, 12);
@@ -124,7 +199,8 @@ namespace Thor404Controller.UI
                 16,
                 1
             );
-            brightnessScale.OnNotify += (_, __) => {
+            brightnessScale.OnNotify += (_, __) =>
+            {
                 _brightness = (byte)brightnessScale.GetValue();
             };
 

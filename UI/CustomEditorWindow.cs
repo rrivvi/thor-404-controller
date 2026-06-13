@@ -74,7 +74,7 @@ namespace Thor404Controller.UI
                 {
                     UpdateKeyColor(colors, button, keyName, "000000");
                 }
-                
+
                 SetAllButtons(buttons, false);
             };
 
@@ -244,18 +244,8 @@ namespace Thor404Controller.UI
             var cancelButton = Button.NewWithLabel("Cancel");
             cancelButton.OnClicked += (_, _) => window.Close();
 
-            var saveButton = Button.NewWithLabel("Save");
-            saveButton.OnClicked += (_, _) =>
+            void ApplyCustomEffect()
             {
-                Program.customColorsPairs = new Dictionary<string, string>(colors);
-                window.Close();
-            };
-
-            var applyButton = Button.NewWithLabel("Apply");
-            applyButton.OnClicked += async (_, _) =>
-            {
-                applyButton.SetSensitive(false);
-
                 Program.customColorsPairs = new Dictionary<string, string>(colors);
                 try
                 {
@@ -273,7 +263,21 @@ namespace Thor404Controller.UI
                 {
                     Console.WriteLine("`Effects.ApplyEffect` failed in CustomEditorWindow.cs:\n\n" + e.Message + "\n\n" + e.StackTrace + "\n\n");
                 }
+            }
 
+            var saveButton = Button.NewWithLabel("Save");
+            saveButton.OnClicked += (_, _) =>
+            {
+                Program.customColorsPairs = new Dictionary<string, string>(colors);
+                ApplyCustomEffect();
+                window.Close();
+            };
+
+            var applyButton = Button.NewWithLabel("Apply");
+            applyButton.OnClicked += async (_, _) =>
+            {
+                applyButton.SetSensitive(false);
+                ApplyCustomEffect();
                 await Task.Delay(1000);
                 applyButton.SetSensitive(true);
             };
