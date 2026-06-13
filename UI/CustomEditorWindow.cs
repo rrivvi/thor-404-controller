@@ -59,7 +59,7 @@ namespace Thor404Controller.UI
             var fillAll = Button.NewWithLabel("Fill All");
             fillAll.OnClicked += (_, _) =>
             {
-                var rgb = RgbaToHex(colorButton.GetRgba());
+                var rgb = Helpers.RgbaToHex(colorButton.GetRgba());
                 foreach (var (keyName, button) in buttons)
                 {
                     UpdateKeyColor(colors, button, keyName, rgb);
@@ -300,7 +300,7 @@ namespace Thor404Controller.UI
             Dictionary<string, string> colors,
             ColorDialogButton colorButton)
         {
-            var rgb = RgbaToHex(colorButton.GetRgba());
+            var rgb = Helpers.RgbaToHex(colorButton.GetRgba());
 
             foreach (var (keyName, button) in buttons)
             {
@@ -359,15 +359,6 @@ namespace Thor404Controller.UI
             var display = Gdk.Display.GetDefault();
             if (display != null)
                 StyleContext.AddProviderForDisplay(display, provider, 1000);
-        }
-
-        private static string RgbaToHex(Gdk.RGBA rgba)
-        {
-            var r = (byte)Math.Round(rgba.Red * 255);
-            var g = (byte)Math.Round(rgba.Green * 255);
-            var b = (byte)Math.Round(rgba.Blue * 255);
-
-            return $"{r:X2}{g:X2}{b:X2}";
         }
     }
 }

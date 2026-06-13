@@ -209,12 +209,7 @@ namespace Thor404Controller.UI
             {
                 applyButton.SetSensitive(false);
 
-                Gdk.RGBA selectedColor = colorPicker.GetRgba();
-                var rgb = string.Concat(
-                    ((byte)Math.Round(selectedColor.Red * 255)).ToString("X2"),
-                    ((byte)Math.Round(selectedColor.Green * 255)).ToString("X2"),
-                    ((byte)Math.Round(selectedColor.Blue * 255)).ToString("X2")
-                );
+                var rgb = Helpers.RgbaToHex(colorPicker.GetRgba());
                 Effects.EffectsEnum selectedPreset = (Effects.EffectsEnum)presetsDropdown.GetSelected();
                 bool enableMulticolor = multicolorCheck.GetActive();
                 byte brightnessValue = (byte)brightnessScale.GetValue();
