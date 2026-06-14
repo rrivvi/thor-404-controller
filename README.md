@@ -14,7 +14,7 @@ Custom mode:
 ### usage
 1. download the [latest release](https://github.com/rrivvi/thor-404-controller/releases/latest) (64-bit linux)
 
-2. unzip, then open terminal in the directory
+2. unzip
 
 3. open the file `Thor404Controller`, and follow displayed instructions
 
