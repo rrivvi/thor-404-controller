@@ -16,10 +16,7 @@ Custom mode:
 
 2. unzip, then open terminal in the directory
 
-3. use the gui with sudo (without sudo, HidSharp may fail)
-```
-sudo ./Thor404Controller
-```
+3. open the file `Thor404Controller`, and follow displayed instructions
 
 ---
 
